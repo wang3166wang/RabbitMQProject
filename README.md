@@ -61,6 +61,8 @@ git push -u origin master
 
 ## AMQP协议
 
+
+
 ![image-20220901123530384](assets/image-20220901123530384.png)
 
 - Broker：接收和分发消息的应用，RabbitMQ就是Message Broker
@@ -72,7 +74,13 @@ git push -u origin master
 - Queue:消息队列，消息最终被送到这里等待consumer取走 
 - Binding：exchange和queue之间的虚拟连接， 用于message的分发依据 
 
-## Exchange的作用
+**AMQP协议直接定义了RabbitMQ的内部结构和外部行为**
+
+**我们使用RabbitMQ本质上是在使用AMQP协议**
+
+**发送者不能直接将消息发送给最终队列，必须发送给交换机**  
+
+## Exchange的作用 
 
 - Exchange是AMQP协议和RabbitMQ的核心组件 
 - Exchange的功能是根据绑定关系和路由键为消息提供路由，将消息转发至相应的队列 
@@ -112,11 +120,68 @@ git push -u origin master
 
 ## 网页端管理工具
 
+### 启用前端插件 
 
+D:\RabbitMQ Server\rabbitmq_server-3.8.3\sbin  安装目录下
 
+#### cmd命令：
 
+cd D:\RabbitMQ Server\rabbitmq_server-3.8.3\sbin 跳转至安装目录下
 
-# 项目架构
+rabbitmq-plugins --help 可以看到帮助文档
+
+rabbitmq-plugins enable rabbitmq_management  启动应用
+
+### 浏览器打开：127.0.0.1:1 5672 
+
+### 默认用户名：guest  默认密码：guest 
+
+# 外卖项目
+
+## 需求分析
+
+- 一个外卖后端系统，用户可以在线下单外卖
+
+- 用户下单后，可以实时查询订单进度
+
+- 系统可以承受短时间的大量并发请求
+
+## 架构设计
+
+- 使用微服务系统，组件之间充分解耦
+- 使用消息中间件，解耦业务逻辑
+- 使用数据库，持久化业务数据
+
+## 什么是微服务架构
+
+- 将应用程序构建为**松耦合**、可独立部署的一组**服务**
+- 服务：一个单个的、可独立部署的软件组件，实现了一些有用的功能
+- 松耦合：封装服务的实现细节，通过API调用
+
+## 架构设计
+
+![image-20220901155607633](assets/image-20220901155607633.png)
+
+## 业务流程
 
 ![image-20220901121835721](assets/image-20220901121835721.png)
 
+## 接口需求
+
+- 新建订单接口
+- 查询订单接口
+- 接口采用REST风格
+
+## 数据库设计原则
+
+- 每个微服务使用自己的数据库
+- 不要使用共享数据库的方式进行通信
+- 不要使用外键，对于数据量非常少的表慎用索引
+
+![image-20220901161627232](assets/image-20220901161627232.png)
+
+## SpringBoot项目搭建
+
+https://start.spring.io/
+
+![image-20220901165827927](assets/image-20220901165827927.png)
