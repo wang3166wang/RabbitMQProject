@@ -10,3 +10,5 @@ https://www.jianshu.com/p/4c68bb302969
   git remote add origin https://github.com/wang3166wang/RabbitMQProject.git
   git push -u origin master
 用此配置可利用Atom随时提交本地文件到GitHub
+自动换行问题
+File下Settings下Editor下勾上Soft Wrap
