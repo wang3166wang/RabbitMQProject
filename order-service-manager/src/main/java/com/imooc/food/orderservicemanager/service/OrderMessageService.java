@@ -92,6 +92,21 @@ public class OrderMessageService {
                     "exchange.settlement.order",
                     "key.order");
 
+            /*---------------------reward---------------------*/
+
+            channel.exchangeDeclare(
+                    "exchange.order.reward",
+                    BuiltinExchangeType.TOPIC,
+                    true,
+                    false,
+                    null);
+
+            channel.queueBind(
+                    "queue.order",
+                    "exchange.order.reward",
+                    "key.order");
+
+
             channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {
             });
             while (true) {
