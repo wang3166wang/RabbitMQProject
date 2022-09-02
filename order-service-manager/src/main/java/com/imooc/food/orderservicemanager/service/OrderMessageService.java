@@ -78,6 +78,20 @@ public class OrderMessageService {
                     "exchange.order.deliveryman",
                     "key.order");
 
+            /*---------------------settlement---------------------*/
+
+            channel.exchangeDeclare(
+                    "exchange.settlement.order",
+                    BuiltinExchangeType.FANOUT,
+                    true,
+                    false,
+                    null);
+
+            channel.queueBind(
+                    "queue.order",
+                    "exchange.settlement.order",
+                    "key.order");
+
             channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {
             });
             while (true) {
