@@ -1,10 +1,10 @@
-package com.imooc.food;
+package com.imooc.food.orderservicemanager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FoodApplicationTests {
+class OrderServiceManagerApplicationTests {
 
 	@Test
 	void contextLoads() {

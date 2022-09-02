@@ -160,7 +160,7 @@ https://start.spring.io/
 
 ![image-20220901165827927](assets/image-20220901165827927.png)
 
-依赖下载速度慢的问题：
+依赖下载速度慢的问题：（报错 先暂时不用）
 
 ```
 	repositories {
