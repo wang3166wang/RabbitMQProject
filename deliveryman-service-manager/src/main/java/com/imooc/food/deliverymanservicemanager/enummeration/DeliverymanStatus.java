@@ -1,15 +1,15 @@
-package com.imooc.food.restaurantservicemanager.enummeration;
+package com.imooc.food.deliverymanservicemanager.enummeration;
 
 /**
- * @ClassName: ProductStatus
+ * @ClassName: DeliverymanStatus
  * @description:
- * @date: 2022/9/2 0002 星期五 14:27
+ * @date: 2022/9/2 0002 星期五 14:56
  * @Company: 鑫开拓电子商务有限公司
  * @author: wsq
  * @version: V1.0
  * @Copyright: Copyright (c) 2022
  */
-public enum  ProductStatus {
+public enum DeliverymanStatus {
     AVALIABLE,
     NOT_AVALIABLE;
 }
