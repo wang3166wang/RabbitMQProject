@@ -38,7 +38,7 @@ public class OrderMessageService {
     RestaurantDao restaurantDao;
 
     @Async
-    public void handleMessage() throws IOException, TimeoutException, InterruptedException, TimeoutException {
+    public void handleMessage() throws Exception {
         log.info("start linstening message");
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
@@ -95,14 +95,31 @@ public class OrderMessageService {
             }
             log.info("sendMessage:restaurantOrderMessageDTO:{}", orderMessageDTO);
 
+            //AutoClosable 消息发送完会自动关闭，这样设置的回调配置就不会起作用
             try (Connection connection = connectionFactory.newConnection();
                  Channel channel = connection.createChannel()) {
+
+                //方式1：
+//                channel.addReturnListener(new ReturnListener() {
+//                    @Override
+//                    public void handleReturn(int replyCode, String replyText, String exchange, String routingKey, AMQP.BasicProperties properties, byte[] body) {
+//                        log.info("Message Return: replyCode:{}, replyText:{}, exchange:{},routingKey:{}, properties:{}, body:{}",replyCode,  replyText,  exchange,  routingKey,  properties, new  String(body));
+//                    }
+//                });
+                //方式2：
+//                channel.addReturnListener(new ReturnCallback() {
+//                    @Override
+//                    public void handle(Return returnMessage) { //入参和上述一样，只是经过包装而已
+//                        log.info("Message Return: returnMessage:{}", returnMessage);
+//                    }
+//                });
+
                 String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                channel.basicPublish("exchange.order.restaurant", "key.order", null, messageToSend.getBytes());
+                channel.basicPublish("exchange.order.restaurant", "key.order", true ,null, messageToSend.getBytes());
 
-
+//                Thread.sleep(1000);
             }
-        } catch (JsonProcessingException | TimeoutException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     };

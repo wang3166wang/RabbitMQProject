@@ -7,6 +7,7 @@ import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
 import com.imooc.food.orderservicemanager.vo.OrderCreateVO;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class OrderService {
     ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public void createOrder(OrderCreateVO orderCreateVO) throws IOException, TimeoutException {
+    public void createOrder(OrderCreateVO orderCreateVO) throws IOException, TimeoutException, InterruptedException {
         log.info("orderCreateVO:{}", orderCreateVO);
         OrderDetailPO orderPO = new OrderDetailPO();
         orderPO.setAddress(orderCreateVO.getAddress());
@@ -57,8 +58,30 @@ public class OrderService {
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
+
             String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+
+            //消息确认机制
+            channel.confirmSelect();
+//            channel.addConfirmListener(new ConfirmListener() {
+//                public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+//                    log.info("Ack, deliveryTag: {}, multiple: {}",  deliveryTag, multiple);
+//                }
+//                public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+//                    log.info("Nack, deliveryTag: {}, multiple: {}", deliveryTag, multiple);
+//
+//                }
+//            });
+//            for (int i = 0; i < 10; i++) {
+//                channel.basicPublish("exchange.order.restaurant", "key.restaurant", null, messageToSend.getBytes());
+//                log.info("message sent");
+//            }
             channel.basicPublish("exchange.order.restaurant", "key.restaurant", null, messageToSend.getBytes());
+            if (channel.waitForConfirms()) {
+                log.info("confirm OK");
+            } else {
+                log.info("confirm Failed");
+            }
         }
     }
 
