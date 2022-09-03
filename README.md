@@ -195,9 +195,19 @@ https://start.spring.io/
 - 若RabbitMQ异常，消息丢失后，订单处理流程停止，业务异常
 - 需要RabbitMQ发送端**确认机制**，确认消息发送
 
+## 什么是发送端确认机制？
+
+- 消息发送后，若中间件收到消息，会给发送端一个应答 
+- 生产者接收应答，用来确认这条消息是否正常发送到中间 件 
+
 ### 解决方法：
 
 三种确认机制：单条同步确认，多条同步确认（不推荐），异步确认（不推荐）
+
+### 开启方法:
+
+- 配置channel，开启确认模式 channel.confirmSelect() 
+- 每发送一条消息，调用channel.waitForConfirms(）方法,等待确认 
 
 ## 2.消息真的被路由了吗？
 
@@ -207,13 +217,13 @@ https://start.spring.io/
 
 ### 解决方法：
 
-#### 消息返回机制原理
+### 消息返回机制原理
 
 - 消息发送后，中间件会对消息进行路由 
 - 若没有发现目标队列，中间件会通知发送方 
 - Return Listener会被调用 
 
-#### 消息返回的开启方法
+### 开启方法:
 
 - 在RabbitMQ基础配置中有一个关键配置项Mandatory 
 - Mandatory若为false, RabbitMQ将直接丢弃无法路由的消息 
@@ -235,13 +245,17 @@ channel.basicPublish("exchange.order.restaurant", "key.order", """"true"""" ,nul
 - QoS功能保证了在一定数目的消息未被确认前，不消费新的消息
 - QoS功能的前提是不使用自动确认
 
+```
+channel.basicAck(message.getEnvelope().getDeliveryTag(),""""""false""""")
+```
+
+ture:确认多条，flase:确认单条
+
 ## 4.消费端处理异常怎么办？ 
 
 - 默认情况下，消费端接收消息时，消息会被自动确认（ACK) 
 - 消费端消息处理异常时，发送端与消息中间件无法得知消息处理情况 
 - 需要使用RabbitMQ**消费端确认机制**，确认消息被正确处理 
-
-
 
 ## 5队列爆满怎么办？ 
 
