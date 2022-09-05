@@ -11,6 +11,10 @@ import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +37,8 @@ public class OrderService {
 
     @Autowired
     private OrderDetailDao orderDetailDao;
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -53,36 +59,35 @@ public class OrderService {
         orderMessageDTO.setProductId(orderPO.getProductId());
         orderMessageDTO.setAccountId(orderCreateVO.getAccountId());
 
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("localhost");
+        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+        MessageProperties messageProperties = new MessageProperties();
+        //过期时间
+        messageProperties.setExpiration("15000");
+        Message message = new Message(messageToSend.getBytes(), messageProperties);
+        CorrelationData correlationData = new CorrelationData();
+        correlationData.setId(orderPO.getId().toString());
+        //传递额外参数时 用这个比较好
+        rabbitTemplate.send(
+                "exchange.order.restaurant",
+                "key.restaurant",
+                message, correlationData
+        );
+        //不传递额外参数时 用这个比较简单
+//        rabbitTemplate.convertAndSend(
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                messageToSend, correlationData);
 
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
+        //Template在这个位置！
+        //        rabbitTemplate.execute(channel -> {
+        //            channel.abort();
+        //            return null;
+        //        });
 
-            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+        log.info("message sent");
 
-            //消息确认机制
-            channel.confirmSelect();
-//            channel.addConfirmListener(new ConfirmListener() {
-//                public void handleAck(long deliveryTag, boolean multiple) throws IOException {
-//                    log.info("Ack, deliveryTag: {}, multiple: {}",  deliveryTag, multiple);
-//                }
-//                public void handleNack(long deliveryTag, boolean multiple) throws IOException {
-//                    log.info("Nack, deliveryTag: {}, multiple: {}", deliveryTag, multiple);
-//
-//                }
-//            });
-//            for (int i = 0; i < 10; i++) {
-//                channel.basicPublish("exchange.order.restaurant", "key.restaurant", null, messageToSend.getBytes());
-//                log.info("message sent");
-//            }
-            channel.basicPublish("exchange.order.restaurant", "key.restaurant", null, messageToSend.getBytes());
-            if (channel.waitForConfirms()) {
-                log.info("confirm OK");
-            } else {
-                log.info("confirm Failed");
-            }
-        }
+        Thread.sleep(1000);
+
     }
 
 }

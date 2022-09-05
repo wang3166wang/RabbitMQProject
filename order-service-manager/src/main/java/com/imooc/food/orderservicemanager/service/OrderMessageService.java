@@ -38,12 +38,17 @@ public class OrderMessageService {
         log.info("start linstening message");
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
-        connectionFactory.setHost("localhost");
+        connectionFactory.setPort(5672);
+
+        Thread.sleep(5000);
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
+/*
 
-            /*---------------------restaurant---------------------*/
+            */
+/*---------------------restaurant---------------------*//*
+
             channel.exchangeDeclare(
                     "exchange.order.restaurant",
                     BuiltinExchangeType.DIRECT,
@@ -64,7 +69,9 @@ public class OrderMessageService {
                     "key.order");
 
 
-            /*---------------------deliveryman---------------------*/
+            */
+/*---------------------deliveryman---------------------*//*
+
             channel.exchangeDeclare(
                     "exchange.order.deliveryman",
                     BuiltinExchangeType.DIRECT,
@@ -78,7 +85,9 @@ public class OrderMessageService {
                     "exchange.order.deliveryman",
                     "key.order");
 
-            /*---------------------settlement---------------------*/
+            */
+/*---------------------settlement---------------------*//*
+
 
             channel.exchangeDeclare(
                     "exchange.settlement.order",
@@ -92,7 +101,9 @@ public class OrderMessageService {
                     "exchange.settlement.order",
                     "key.order");
 
-            /*---------------------reward---------------------*/
+            */
+/*---------------------reward---------------------*//*
+
 
             channel.exchangeDeclare(
                     "exchange.order.reward",
@@ -105,6 +116,7 @@ public class OrderMessageService {
                     "queue.order",
                     "exchange.order.reward",
                     "key.order");
+*/
 
 
             channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {

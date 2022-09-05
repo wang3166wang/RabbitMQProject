@@ -24,7 +24,7 @@ public class RabbitConfig {
     OrderMessageService orderMessageService;
 
     @Autowired
-    public void startListenMessage() throws IOException, TimeoutException, InterruptedException {
+    public void startListenMessage() throws Exception {
         orderMessageService.handleMessage();
     }
 }
