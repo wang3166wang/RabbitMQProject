@@ -123,12 +123,12 @@ public class RabbitConfig {
     @Bean
     public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
         RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory);
-        //开启自动启动
+        //开启自动启动,不开启的话 前面声明的都不会被自动创建
         rabbitAdmin.setAutoStartup(true);
         return rabbitAdmin;
     }
 
-    @Bean
+/*    @Bean
     RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMandatory(true);
@@ -147,5 +147,5 @@ public class RabbitConfig {
                         exchange,
                         routingKey));
         return rabbitTemplate;
-    }
+    }*/
 }

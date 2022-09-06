@@ -35,12 +35,14 @@ public class OrderMessageService {
 
     @Async
     public void handleMessage() throws IOException, TimeoutException, InterruptedException {
+        Thread.sleep(5000);
+
         log.info("start linstening message");
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
         connectionFactory.setPort(5672);
-
-        Thread.sleep(5000);
+        connectionFactory.setUsername("guest");
+        connectionFactory.setPassword("guest");
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {

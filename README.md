@@ -272,3 +272,40 @@ ture:确认多条，flase:确认单条
 - 消息被设置了过期时间，过期后会直接被丢弃 
 - 直接被丢弃的消息，无法对系统运行异常发出警报 
 - 需要使用RabbitMQ**死信队列**，收集过期消息，以供分析 
+
+# Springboot集成RabbitMQ
+
+## Spring AMQP特性 
+
+- 异步消息监听容器 
+- 原生提供Rabbitlemplate，方便收发消息 
+- 原生提供RabbitAdmin，方便队列、交换机声明 
+- Spring Boot Config原生支持RabbitMQ 
+
+## 异步消息监听容器 
+
+原始实现：自己实现线程池、回调方法，并注册回调方法 
+SpringBoot ：自动实现可配置的线程池，并自动注册回调方法，只需实现回调方法 
+
+## RabbitAdmin
+
+声明式提供队列、交换机、绑定关系的注册方法
+
+甚至不需要显示的注册代码
+
+## Spring Boot Config
+
+充分发挥Spring Boot约定大于配置的特性
+
+可以隐士建立Connection、channel
+
+## RabbitAdmin声明式配置 
+
+- 将Exchanges Queues Binding声明为Bean 
+- 再将RabbitAdmin声明为Bean 
+- Exchanges Queue Binding即可自动创建 
+
+## RabbitAdmin声明式配置的优点 
+
+- 将声明和创建工作分开，解藕多人工作 
+- 不需显式声明，减少代码量，减少Bug 
