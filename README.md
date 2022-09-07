@@ -309,3 +309,18 @@ SpringBoot ：自动实现可配置的线程池，并自动注册回调方法，
 
 - 将声明和创建工作分开，解藕多人工作 
 - 不需显式声明，减少代码量，减少Bug 
+
+## RabbitTemplate 
+
+- Rabbitlemplate与Restlemplate类似，使用了模板方法设计模式 
+- RabbitTemplate提供了丰富的功能，方便消息收发 
+- RabbitTemplate可以显式传入配置也可以隐式声明配置
+
+## SimpleMessageListenerContainer 简单消息监听容器 
+
+- 设置同时监听多个队列、自动启动、自动配置RabbitMQ 
+- 设置消费者数量（最大数量、最小数量、批量消费） 
+- 设置消息确认模式、是否重回队列、异常捕获
+- 设置是否独占、其他消费者属性等
+- 设置具体的监听器、消息转换器等
+- 支持动态设置，运行中修改监听器配置

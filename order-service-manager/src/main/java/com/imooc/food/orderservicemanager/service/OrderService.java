@@ -6,10 +6,6 @@ import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
 import com.imooc.food.orderservicemanager.vo.OrderCreateVO;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConfirmListener;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -38,7 +34,7 @@ public class OrderService {
     @Autowired
     private OrderDetailDao orderDetailDao;
     @Autowired
-    RabbitTemplate rabbitTemplate;
+    private RabbitTemplate rabbitTemplate;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -76,13 +72,9 @@ public class OrderService {
 //        rabbitTemplate.convertAndSend(
 //                "exchange.order.restaurant",
 //                "key.restaurant",
-//                messageToSend, correlationData);
+//                messageToSend);
 
-        //Template在这个位置！
-        //        rabbitTemplate.execute(channel -> {
-        //            channel.abort();
-        //            return null;
-        //        });
+        //Template模板在于都会调用execute方法
 
         log.info("message sent");
 

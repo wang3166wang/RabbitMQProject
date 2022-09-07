@@ -1,6 +1,5 @@
 package com.imooc.food.restaurantservicemanager.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.food.restaurantservicemanager.dao.ProductDao;
 import com.imooc.food.restaurantservicemanager.dao.RestaurantDao;
@@ -14,9 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName: OrderMessageService

@@ -6,10 +6,18 @@ import com.imooc.food.orderservicemanager.dao.OrderDetailDao;
 import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -33,111 +41,44 @@ public class OrderMessageService {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @Async
-    public void handleMessage() throws IOException, TimeoutException, InterruptedException {
-        Thread.sleep(5000);
-
-        log.info("start linstening message");
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("localhost");
-        connectionFactory.setPort(5672);
-        connectionFactory.setUsername("guest");
-        connectionFactory.setPassword("guest");
-
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
-/*
-
-            */
-/*---------------------restaurant---------------------*//*
-
-            channel.exchangeDeclare(
-                    "exchange.order.restaurant",
-                    BuiltinExchangeType.DIRECT,
-                    true,
-                    false,
-                    null);
-
-            channel.queueDeclare(
-                    "queue.order",
-                    true,
-                    false,
-                    false,
-                    null);
-
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.restaurant",
-                    "key.order");
-
-
-            */
-/*---------------------deliveryman---------------------*//*
-
-            channel.exchangeDeclare(
-                    "exchange.order.deliveryman",
-                    BuiltinExchangeType.DIRECT,
-                    true,
-                    false,
-                    null);
-
-
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.deliveryman",
-                    "key.order");
-
-            */
-/*---------------------settlement---------------------*//*
-
-
-            channel.exchangeDeclare(
-                    "exchange.settlement.order",
-                    BuiltinExchangeType.FANOUT,
-                    true,
-                    false,
-                    null);
-
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.settlement.order",
-                    "key.order");
-
-            */
-/*---------------------reward---------------------*//*
-
-
-            channel.exchangeDeclare(
-                    "exchange.order.reward",
-                    BuiltinExchangeType.TOPIC,
-                    true,
-                    false,
-                    null);
-
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.reward",
-                    "key.order");
-*/
-
-
-            channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {
-            });
-            while (true) {
-                Thread.sleep(100000);
+    @RabbitListener(
+            //containerFactory = "rabbitListenerContainerFactory",
+            //queues = "queue.order",
+            //admin = "rabbitAdmin",
+            bindings = {
+                    @QueueBinding(
+                            value = @Queue(name = "${imooc.order-queue}",
+                                    arguments = {
+                                            //@Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
+                                            //@Argument(name = "x-dead-letter-exchange", value = "aaaaa"),
+                                            //@Argument(name = "x-dead-letter-routing-key", value = "bbbb")
+                                    }),
+                            exchange = @Exchange(name = "exchange.order.restaurant", type = ExchangeTypes.DIRECT),
+                            key = "key.order"
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.order.deliveryman", type = ExchangeTypes.DIRECT),
+                            key = "key.order"
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.settlement.order", type = ExchangeTypes.FANOUT),
+                            key = "key.order"
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.order.reward", type = ExchangeTypes.TOPIC),
+                            key = "key.order"
+                    )
             }
-        }
-    }
-
-    DeliverCallback deliverCallback = (consumerTag, message) -> {
-        String messageBody = new String(message.getBody());
-        log.info("deliverCallback:messageBody:{}", messageBody);
+    )
+    public void handleMessage(@Payload Message message) throws IOException {
+        log.info("handleMessage:message:{}", new String(message.getBody()));
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
-
         try {
-            //反序列化
-            OrderMessageDTO orderMessageDTO = objectMapper.readValue(messageBody,
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(message.getBody(),
                     OrderMessageDTO.class);
             OrderDetailPO orderPO = orderDetailDao.selectOrder(orderMessageDTO.getOrderId());
 
@@ -167,8 +108,12 @@ public class OrderMessageService {
                         try (Connection connection = connectionFactory.newConnection();
                              Channel channel = connection.createChannel()) {
                             String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                            channel.basicPublish("exchange.order.settlement", "key.settlement", null,
-                                    messageToSend.getBytes());
+                            channel.basicPublish(
+                                    "exchange.order.settlement",
+                                    "key.settlement",
+                                    null,
+                                    messageToSend.getBytes()
+                            );
                         }
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
@@ -183,8 +128,14 @@ public class OrderMessageService {
                         try (Connection connection = connectionFactory.newConnection();
                              Channel channel = connection.createChannel()) {
                             String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                            channel.basicPublish("exchange.order.reward", "key.reward", null, messageToSend.getBytes());
+                            channel.basicPublish(
+                                    "exchange.order.reward",
+                                    "key.reward",
+                                    null,
+                                    messageToSend.getBytes()
+                            );
                         }
+
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
@@ -205,6 +156,5 @@ public class OrderMessageService {
         } catch (JsonProcessingException | TimeoutException e) {
             e.printStackTrace();
         }
-    };
-
+    }
 }
