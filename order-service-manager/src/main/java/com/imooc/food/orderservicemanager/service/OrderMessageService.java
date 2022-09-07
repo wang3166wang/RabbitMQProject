@@ -16,6 +16,7 @@ import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -57,17 +58,17 @@ public class OrderMessageService {
                             key = "key.order"
                     ),
                     @QueueBinding(
-                            value = @Queue(name = "queue.order"),
+                            value = @Queue(name = "${imooc.order-queue}"),
                             exchange = @Exchange(name = "exchange.order.deliveryman", type = ExchangeTypes.DIRECT),
                             key = "key.order"
                     ),
                     @QueueBinding(
-                            value = @Queue(name = "queue.order"),
+                            value = @Queue(name = "${imooc.order-queue}"),
                             exchange = @Exchange(name = "exchange.settlement.order", type = ExchangeTypes.FANOUT),
                             key = "key.order"
                     ),
                     @QueueBinding(
-                            value = @Queue(name = "queue.order"),
+                            value = @Queue(name = "${imooc.order-queue}"),
                             exchange = @Exchange(name = "exchange.order.reward", type = ExchangeTypes.TOPIC),
                             key = "key.order"
                     )
@@ -95,9 +96,11 @@ public class OrderMessageService {
                             channel.basicPublish("exchange.order.deliveryman", "key.deliveryman", null,
                                     messageToSend.getBytes());
                         }
+                        log.info("商户系统已确认，转发至骑手系统");
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
+                        log.info("商户系统未确认，订单创建失败");
                     }
                     break;
                 case RESTAURANT_CONFIRMED:
@@ -114,10 +117,12 @@ public class OrderMessageService {
                                     null,
                                     messageToSend.getBytes()
                             );
+                            log.info("骑手系统已确认，转发至结算系统");
                         }
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
+                        log.info("骑手系统未确认，订单创建失败");
                     }
                     break;
                 case DELIVERYMAN_CONFIRMED:
@@ -134,11 +139,13 @@ public class OrderMessageService {
                                     null,
                                     messageToSend.getBytes()
                             );
+                            log.info("结算系统已确认，转发至积分系统");
                         }
 
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
+                        log.info("结算系统未确认，订单创建失败");
                     }
                     break;
                 case SETTLEMENT_CONFIRMED:
@@ -146,9 +153,11 @@ public class OrderMessageService {
                         orderPO.setStatus(OrderStatus.ORDER_CREATED);
                         orderPO.setRewardId(orderMessageDTO.getRewardId());
                         orderDetailDao.update(orderPO);
+                        log.info("积分系统已确认，下单业务流程结束");
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
+                        log.info("结算系统未确认，订单创建失败");
                     }
                     break;
             }
