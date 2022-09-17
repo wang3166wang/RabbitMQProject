@@ -6,8 +6,6 @@ import com.imooc.food.orderservicemanager.dao.OrderDetailDao;
 import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -22,7 +20,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName: OrderMessageService
@@ -41,6 +38,9 @@ public class OrderMessageService {
     private OrderDetailDao orderDetailDao;
 
     ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @RabbitListener(
             //containerFactory = "rabbitListenerContainerFactory",
@@ -75,9 +75,10 @@ public class OrderMessageService {
             }
     )
     public void handleMessage(@Payload Message message) throws IOException {
-        log.info("handleMessage:message:{}", new String(message.getBody()));
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("localhost");
+        log.info("Accept Routing Message");
+        log.info("message:{}", new String(message.getBody()));
+//        ConnectionFactory connectionFactory = new ConnectionFactory();
+//        connectionFactory.setHost("localhost");
         try {
             OrderMessageDTO orderMessageDTO = objectMapper.readValue(message.getBody(),
                     OrderMessageDTO.class);
@@ -90,17 +91,27 @@ public class OrderMessageService {
                         orderPO.setStatus(OrderStatus.RESTAURANT_CONFIRMED);
                         orderPO.setPrice(orderMessageDTO.getPrice());
                         orderDetailDao.update(orderPO);
-                        try (Connection connection = connectionFactory.newConnection();
-                             Channel channel = connection.createChannel()) {
-                            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                            channel.basicPublish("exchange.order.deliveryman", "key.deliveryman", null,
-                                    messageToSend.getBytes());
-                        }
-                        log.info("商户系统已确认，转发至骑手系统");
+
+//                        //这是最底层的发消息方法，下面rabbitTemplate的方法对底层方法进行了封装
+//                        try (Connection connection = connectionFactory.newConnection();
+//                             Channel channel = connection.createChannel()) {
+//                            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+//                            channel.basicPublish("exchange.order.deliveryman", "key.deliveryman", null,
+//                                    messageToSend.getBytes());
+//                        }
+
+                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+
+                        //不传递额外参数时 用这个比较简单
+                        rabbitTemplate.convertAndSend(
+                                "exchange.order.deliveryman",
+                                "key.deliveryman",
+                                messageToSend);
+                        log.info("restaurant微服务已确认，转发至deliveryman微服务");
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
-                        log.info("商户系统未确认，订单创建失败");
+                        log.info("restaurant微服务未确认，订单创建失败");
                     }
                     break;
                 case RESTAURANT_CONFIRMED:
@@ -108,21 +119,18 @@ public class OrderMessageService {
                         orderPO.setStatus(OrderStatus.DELIVERYMAN_CONFIRMED);
                         orderPO.setDeliverymanId(orderMessageDTO.getDeliverymanId());
                         orderDetailDao.update(orderPO);
-                        try (Connection connection = connectionFactory.newConnection();
-                             Channel channel = connection.createChannel()) {
-                            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                            channel.basicPublish(
-                                    "exchange.order.settlement",
-                                    "key.settlement",
-                                    null,
-                                    messageToSend.getBytes()
-                            );
-                            log.info("骑手系统已确认，转发至结算系统");
-                        }
+
+                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+                        rabbitTemplate.convertAndSend(
+                                "exchange.order.settlement",
+                                "key.settlement",
+                                messageToSend);
+                        log.info("deliveryman微服务已确认，转发至settlement微服务");
+
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
-                        log.info("骑手系统未确认，订单创建失败");
+                        log.info("deliveryman微服务未确认，订单创建失败");
                     }
                     break;
                 case DELIVERYMAN_CONFIRMED:
@@ -130,22 +138,18 @@ public class OrderMessageService {
                         orderPO.setStatus(OrderStatus.SETTLEMENT_CONFIRMED);
                         orderPO.setSettlementId(orderMessageDTO.getSettlementId());
                         orderDetailDao.update(orderPO);
-                        try (Connection connection = connectionFactory.newConnection();
-                             Channel channel = connection.createChannel()) {
-                            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                            channel.basicPublish(
-                                    "exchange.order.reward",
-                                    "key.reward",
-                                    null,
-                                    messageToSend.getBytes()
-                            );
-                            log.info("结算系统已确认，转发至积分系统");
-                        }
+
+                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+                        rabbitTemplate.convertAndSend(
+                                "exchange.order.reward",
+                                "key.reward",
+                                messageToSend);
+                        log.info("settlement微服务已确认，转发至reward微服务");
 
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
-                        log.info("结算系统未确认，订单创建失败");
+                        log.info("settlement微服务未确认，订单创建失败");
                     }
                     break;
                 case SETTLEMENT_CONFIRMED:
@@ -153,16 +157,16 @@ public class OrderMessageService {
                         orderPO.setStatus(OrderStatus.ORDER_CREATED);
                         orderPO.setRewardId(orderMessageDTO.getRewardId());
                         orderDetailDao.update(orderPO);
-                        log.info("积分系统已确认，下单业务流程结束");
+                        log.info("reward微服务已确认，下单业务流程结束");
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
                         orderDetailDao.update(orderPO);
-                        log.info("结算系统未确认，订单创建失败");
+                        log.info("reward微服务未确认，订单创建失败");
                     }
                     break;
             }
 
-        } catch (JsonProcessingException | TimeoutException e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }

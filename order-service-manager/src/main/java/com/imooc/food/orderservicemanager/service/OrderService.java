@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName: OrderService
@@ -39,7 +38,7 @@ public class OrderService {
     ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public void createOrder(OrderCreateVO orderCreateVO) throws IOException, TimeoutException, InterruptedException {
+    public String createOrder(OrderCreateVO orderCreateVO) throws IOException, InterruptedException {
         log.info("orderCreateVO:{}", orderCreateVO);
         OrderDetailPO orderPO = new OrderDetailPO();
         orderPO.setAddress(orderCreateVO.getAddress());
@@ -76,9 +75,11 @@ public class OrderService {
 
         //Template模板在于都会调用execute方法
 
-        log.info("message sent");
+        log.info("order微服务生成订单，转发至restaurant微服务");
 
         Thread.sleep(1000);
+
+        return "SUCCESS";
 
     }
 

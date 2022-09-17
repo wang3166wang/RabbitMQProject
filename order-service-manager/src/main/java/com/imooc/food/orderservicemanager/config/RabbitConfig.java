@@ -29,8 +29,8 @@ import java.util.concurrent.TimeoutException;
  * @version: V1.0
  * @Copyright: Copyright (c) 2022
  */
-@Slf4j
-@Configuration
+//@Slf4j
+//@Configuration
 public class RabbitConfig {
 //    @Autowired
 //    OrderMessageService orderMessageService;
