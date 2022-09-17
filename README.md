@@ -352,4 +352,16 @@ SpringBoot ：自动实现可配置的线程池，并自动注册回调方法，
 - 集群节点之间共享元数据，不共享队列数据（默认） 
 - RabbitMQ节点数据互相转发，客户端通过单一节点可以访问所有数据 
 
-![image-20220907181312957](assets/image-20220907181312957.png)
+![image-20220917170938708](assets/image-20220917170938708.png)
+
+## RabbitMQ集群搭建步骤
+
+- 设置主机名或host,使得节点之间可以通过名称访问
+- 安装RabbitMQ单节点
+- 复制Erlang cookie
+- 启动RabbitMQ并组成集群
+
+### 单节点安装Rabbitmq
+
+[^参考文档：]: https://qkongtao.cn/?p=1353
+
