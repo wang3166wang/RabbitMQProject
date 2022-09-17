@@ -363,5 +363,4 @@ SpringBoot ：自动实现可配置的线程池，并自动注册回调方法，
 
 ### 单节点安装Rabbitmq
 
-[^参考文档：]: https://qkongtao.cn/?p=1353
-
+参考文档：https://qkongtao.cn/?p=1353
