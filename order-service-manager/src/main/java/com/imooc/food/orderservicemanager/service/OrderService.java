@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.food.orderservicemanager.dao.OrderDetailDao;
 import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
+import com.imooc.food.orderservicemanager.moodymq.sender.TransMessageSender;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
 import com.imooc.food.orderservicemanager.vo.OrderCreateVO;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,9 @@ public class OrderService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    TransMessageSender transMessageSender;
+
     ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -55,18 +59,18 @@ public class OrderService {
         orderMessageDTO.setAccountId(orderCreateVO.getAccountId());
 
         String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-        MessageProperties messageProperties = new MessageProperties();
-        //过期时间
-        messageProperties.setExpiration("15000");
-        Message message = new Message(messageToSend.getBytes(), messageProperties);
-        CorrelationData correlationData = new CorrelationData();
-        correlationData.setId(orderPO.getId().toString());
+//        MessageProperties messageProperties = new MessageProperties();
+//        //过期时间
+//        messageProperties.setExpiration("15000");
+//        Message message = new Message(messageToSend.getBytes(), messageProperties);
+//        CorrelationData correlationData = new CorrelationData();
+//        correlationData.setId(orderPO.getId().toString());
         //传递额外参数时 用这个比较好
-        rabbitTemplate.send(
-                "exchange.order.restaurant",
-                "key.restaurant",
-                message, correlationData
-        );
+//        rabbitTemplate.send(
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                message, correlationData
+//        );
         //不传递额外参数时 用这个比较简单
 //        rabbitTemplate.convertAndSend(
 //                "exchange.order.restaurant",
@@ -74,6 +78,11 @@ public class OrderService {
 //                messageToSend);
 
         //Template模板在于都会调用execute方法
+
+        transMessageSender.send(
+                "exchange.order.restaurant",
+                "key.restaurant",
+                messageToSend);
 
         log.info("order微服务生成订单，转发至restaurant微服务");
 
