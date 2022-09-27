@@ -21,7 +21,7 @@ import java.util.UUID;
  * @Copyright: Copyright (c) 2022
  */
 @Service
-public class TransMessageServiceImpl implements TransMessageService  {
+public class TransMessageServiceImpl implements TransMessageService {
     @Autowired
     TransMessageDao transMessageDao;
 
@@ -58,7 +58,7 @@ public class TransMessageServiceImpl implements TransMessageService  {
     @Override
     public List<TransMessagePO> listReadyMessages() {
         return transMessageDao.selectByTypeAndService(
-                TransMessageType.SEND.toString() ,serviceName
+                TransMessageType.SEND.toString(), serviceName
         );
     }
 
@@ -74,5 +74,50 @@ public class TransMessageServiceImpl implements TransMessageService  {
         TransMessagePO transMessagePO = transMessageDao.selectByIdAndService(id, serviceName);
         transMessagePO.setType(TransMessageType.DEAD);
         transMessageDao.update(transMessagePO);
+    }
+
+    @Override
+    public void messageDead(String id, String exchange, String routingKey, String queue, String body) {
+        TransMessagePO transMessagePO = new TransMessagePO();
+        transMessagePO.setId(id);
+        transMessagePO.setService(serviceName);
+        transMessagePO.setExchange(exchange);
+        transMessagePO.setRoutingKey(routingKey);
+        transMessagePO.setQueue(queue);
+        transMessagePO.setPayload(body);
+        transMessagePO.setDate(new Date());
+        transMessagePO.setSequence(0);
+        transMessagePO.setType(TransMessageType.DEAD);
+        transMessageDao.insert(transMessagePO);
+    }
+
+    @Override
+    public TransMessagePO messageReceiveReady(
+            String id, String exchange, String routingKey, String queue, String body) {
+
+        TransMessagePO transMessagePO =
+                transMessageDao.selectByIdAndService(id, serviceName);
+        if (null == transMessagePO) {
+            transMessagePO = new TransMessagePO();
+            transMessagePO.setId(id);
+            transMessagePO.setService(serviceName);
+            transMessagePO.setExchange(exchange);
+            transMessagePO.setRoutingKey(routingKey);
+            transMessagePO.setQueue(queue);
+            transMessagePO.setPayload(body);
+            transMessagePO.setDate(new Date());
+            transMessagePO.setSequence(0);
+            transMessagePO.setType(TransMessageType.RECEIVE);
+            transMessageDao.insert(transMessagePO);
+        } else {
+            transMessagePO.setSequence(transMessagePO.getSequence() + 1);
+            transMessageDao.update(transMessagePO);
+        }
+        return transMessagePO;
+    }
+
+    @Override
+    public void messageReceiveSuccess(String id) {
+        transMessageDao.delete(id, serviceName);
     }
 }

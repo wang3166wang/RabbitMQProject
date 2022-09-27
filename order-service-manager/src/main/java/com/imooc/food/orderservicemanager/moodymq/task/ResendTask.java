@@ -1,6 +1,7 @@
 package com.imooc.food.orderservicemanager.moodymq.task;
 
 import com.imooc.food.orderservicemanager.moodymq.po.TransMessagePO;
+import com.imooc.food.orderservicemanager.moodymq.sender.TransMessageSender;
 import com.imooc.food.orderservicemanager.moodymq.service.TransMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -25,7 +26,7 @@ import java.util.List;
  * @version: V1.0
  * @Copyright: Copyright (c) 2022
  */
-@EnableScheduling
+//@EnableScheduling
 @Configuration
 @Component
 @Slf4j
@@ -35,21 +36,23 @@ public class ResendTask {
     TransMessageService transMessageService;
     @Autowired
     RabbitTemplate rabbitTemplate;
+    @Autowired
+    TransMessageSender transMessageSender;
 
     @Value("${moodymq.resendTimes}")
     Integer resendTimes;
 
     @Scheduled(fixedDelayString = "${moodymq.resendFreq}")
-    public void resendMessage(){
-        log.info("resendMessage() invoked.");
-        List<TransMessagePO> messagePOS =
-                transMessageService.listReadyMessages();
-        log.info("resendMessage(): messagepos:{}", messagePOS);
+    public void resendMessage() {
+        //log.info("重发消息定时任务-查询数据库应发未发消息");
+        List<TransMessagePO> messagePOS = transMessageService.listReadyMessages();
+        log.info("重发消息定时任务-查询到的应发未发消息集合:{}", messagePOS);
 
-        for (TransMessagePO po: messagePOS) {
-            log.info("resendMessage(): po:{}", po);
-            if(po.getSequence() > resendTimes){
-                log.error("resend too many times!");
+        for (TransMessagePO po : messagePOS) {
+            log.info("重发消息定时任务-单条信息内容: po:{}", po);
+            log.info("重发消息定时任务-id:{},重发次数:{}", po.getId(),po.getSequence());
+            if (po.getSequence() > resendTimes) {
+                log.error("重发消息定时任务-重发次数超出上限,放弃id:{}",po.getId());
                 transMessageService.messageDead(po.getId());
                 continue;
             }
@@ -63,7 +66,7 @@ public class ResendTask {
                     message,
                     new CorrelationData(po.getId()));
 
-            log.info("message sent, ID:{}", po.getId());
+            log.info("重发消息定时任务-重新发送, ID:{}", po.getId());
             transMessageService.messageResend(po.getId());
         }
     }

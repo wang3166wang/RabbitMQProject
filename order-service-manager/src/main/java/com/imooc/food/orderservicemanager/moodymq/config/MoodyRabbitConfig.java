@@ -79,7 +79,10 @@ public class MoodyRabbitConfig {
     @Bean
     public RabbitTemplate customRabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        //Mandatory若为false, RabbitMQ将直接丢弃无法路由的消息
+        //Mandatory若为true, RabbitMQ才会处理无法路由的消息
         rabbitTemplate.setMandatory(true);
+        //当消息到达交换机触发回调
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
             log.info("correlationData:{}, ack:{}, cause:{}",
                     correlationData, ack, cause);
@@ -92,10 +95,10 @@ public class MoodyRabbitConfig {
             }
         });
 
-        rabbitTemplate.setReturnsCallback(returned -> {log.error("消息无法路由！message:{}, replyCode:{} replyText:{} exchange:{} routingKey:{}",returned.getMessage(), returned.getReplyCode(), returned.getReplyText(), returned.getExchange(), returned.getRoutingKey());
-//        rabbitTemplate.setReturnsCallback((message, replyCode, replyText, exchange, routingKey) -> {
-//            log.error("消息无法路由！message:{}, replyCode:{} replyText:{} exchange:{} routingKey:{}",
-//                    message, replyCode, replyText, exchange, routingKey);
+        //消息(带有路由键routingKey)到达交换机，与交换机的所有绑定键进行匹配，匹配不到触发回调
+        rabbitTemplate.setReturnsCallback(returned -> {
+            log.error("消息无法路由！message:{}, replyCode:{} replyText:{} exchange:{} routingKey:{}"
+                    ,returned.getMessage(), returned.getReplyCode(), returned.getReplyText(), returned.getExchange(), returned.getRoutingKey());
             transMessageService.messageSendReturn(
                     returned.getMessage().getMessageProperties().getMessageId(),
                     returned.getExchange(),

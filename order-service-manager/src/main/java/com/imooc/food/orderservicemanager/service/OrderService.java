@@ -34,15 +34,14 @@ public class OrderService {
     @Autowired
     private OrderDetailDao orderDetailDao;
     @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @Autowired
     TransMessageSender transMessageSender;
+//    @Autowired
+//    private RabbitTemplate rabbitTemplate;
 
-    ObjectMapper objectMapper = new ObjectMapper();
+//    ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public String createOrder(OrderCreateVO orderCreateVO) throws IOException, InterruptedException {
+    public String createOrder(OrderCreateVO orderCreateVO) {
         log.info("orderCreateVO:{}", orderCreateVO);
         OrderDetailPO orderPO = new OrderDetailPO();
         orderPO.setAddress(orderCreateVO.getAddress());
@@ -58,7 +57,13 @@ public class OrderService {
         orderMessageDTO.setProductId(orderPO.getProductId());
         orderMessageDTO.setAccountId(orderCreateVO.getAccountId());
 
-        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+        transMessageSender.send(
+                "exchange.order.restaurant",
+                "key.restaurant",
+                orderMessageDTO
+        );
+
+//        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
 //        MessageProperties messageProperties = new MessageProperties();
 //        //过期时间
 //        messageProperties.setExpiration("15000");
@@ -79,14 +84,14 @@ public class OrderService {
 
         //Template模板在于都会调用execute方法
 
-        transMessageSender.send(
-                "exchange.order.restaurant",
-                "key.restaurant",
-                messageToSend);
+//        transMessageSender.send(
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                messageToSend);
 
         log.info("order微服务生成订单，转发至restaurant微服务");
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         return "SUCCESS";
 

@@ -29,91 +29,115 @@ import java.util.concurrent.TimeoutException;
  * @version: V1.0
  * @Copyright: Copyright (c) 2022
  */
-//@Slf4j
-//@Configuration
+@Slf4j
+@Configuration
 public class RabbitConfig {
-//    @Autowired
-//    OrderMessageService orderMessageService;
+    @Autowired
+    OrderMessageService orderMessageService;
 
 //    @Autowired
 //    public void startListenMessage() throws IOException, TimeoutException, InterruptedException {
 //        orderMessageService.handleMessage();
 //    }
-//
-//    /*---------------------restaurant---------------------*/
-//    @Bean
-//    public Exchange exchange1() {
-//        return new DirectExchange("exchange.order.restaurant");
-//    }
-//
-//    @Bean
-//    public Queue queue1() {
-//        return new Queue("queue.order");
-//    }
-//
-//    @Bean
-//    public Binding binding1() {
-//        return new Binding(
-//                "queue.order",
-//                Binding.DestinationType.QUEUE,
-//                "exchange.order.deliveryman",
-//                "key.order",
-//                null);
-//    }
-//
-//    /*---------------------deliveryman---------------------*/
-//    @Bean
-//    public Exchange exchange2() {
-//        return new DirectExchange("exchange.order.deliveryman");
-//    }
-//
-//    @Bean
-//    public Binding binding2() {
-//        return new Binding(
-//                "queue.order",
-//                Binding.DestinationType.QUEUE,
-//                "exchange.order.deliveryman",
-//                "key.order",
-//                null);
-//    }
-//
-//    /*---------settlement---------*/
-//    @Bean
-//    public Exchange exchange3() {
-//        return new FanoutExchange("exchange.order.settlement");
-//    }
-//
-//    @Bean
-//    public Exchange exchange4() {
-//        return new FanoutExchange("exchange.settlement.order");
-//    }
-//
-//    @Bean
-//    public Binding binding3() {
-//        return new Binding(
-//                "queue.order",
-//                Binding.DestinationType.QUEUE,
-//                "exchange.settlement.order",
-//                "key.order",
-//                null);
-//    }
-//
-//    /*--------------reward----------------*/
-//    @Bean
-//    public Exchange exchange5() {
-//        return new TopicExchange("exchange.order.reward");
-//    }
-//
-//    @Bean
-//    public Binding binding4() {
-//        return new Binding(
-//                "queue.order",
-//                Binding.DestinationType.QUEUE,
-//                "exchange.order.reward",
-//                "key.order",
-//                null);
-//    }
-//
+
+    /*---------------------restaurant---------------------*/
+    @Bean
+    public Exchange exchange1() {
+        return new DirectExchange("exchange.order.restaurant");
+    }
+
+    @Bean
+    public Queue queue1() {
+        return new Queue("queue.order");
+    }
+
+    @Bean
+    public Binding binding1() {
+        return new Binding(
+                "queue.order",
+                Binding.DestinationType.QUEUE,
+                "exchange.order.restaurant",
+                "key.order",
+                null);
+    }
+
+    /*---------------------deliveryman---------------------*/
+    @Bean
+    public Exchange exchange2() {
+        return new DirectExchange("exchange.order.deliveryman");
+    }
+
+    @Bean
+    public Binding binding2() {
+        return new Binding(
+                "queue.order",
+                Binding.DestinationType.QUEUE,
+                "exchange.order.deliveryman",
+                "key.order",
+                null);
+    }
+
+    /*---------settlement---------*/
+    @Bean
+    public Exchange exchange3() {
+        return new FanoutExchange("exchange.order.settlement");
+    }
+
+    @Bean
+    public Exchange exchange4() {
+        return new FanoutExchange("exchange.settlement.order");
+    }
+
+    @Bean
+    public Binding binding3() {
+        return new Binding(
+                "queue.order",
+                Binding.DestinationType.QUEUE,
+                "exchange.settlement.order",
+                "key.order",
+                null);
+    }
+
+    /*--------------reward----------------*/
+    @Bean
+    public Exchange exchange5() {
+        return new TopicExchange("exchange.order.reward");
+    }
+
+    @Bean
+    public Binding binding4() {
+        return new Binding(
+                "queue.order",
+                Binding.DestinationType.QUEUE,
+                "exchange.order.reward",
+                "key.order",
+                null);
+    }
+
+    //消息监听容器
+    @Bean
+    public SimpleMessageListenerContainer simpleMessageListenerContainer(ConnectionFactory connectionFactory, OrderMessageService orderMessageService) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
+        container.setQueueNames("queue.order");
+        container.setExposeListenerChannel(true);
+        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        container.setMessageListener(orderMessageService);
+        return container;
+//        SimpleMessageListenerContainer messageListenerContainer = new SimpleMessageListenerContainer(connectionFactory);
+//        messageListenerContainer.setQueueNames("queue.order");
+//        //并发的消费者数量
+//        messageListenerContainer.setConcurrentConsumers(3);
+//        messageListenerContainer.setMaxConcurrentConsumers(5);
+//        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
+//        MessageListenerAdapter listenerAdapter = new MessageListenerAdapter();
+//        listenerAdapter.setDelegate(orderMessageService);
+//        Map<String, String> methodMap = new HashMap<>(8);
+//        methodMap.put("queue.order", "handleMessage1");
+//        listenerAdapter.setQueueOrTagToMethodName(methodMap);
+//        messageListenerContainer.setMessageListener(listenerAdapter);
+//        return messageListenerContainer;
+    }
+
 //    @Bean
 //    public ConnectionFactory connectionFactory() {
 //        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
@@ -150,23 +174,5 @@ public class RabbitConfig {
 //                log.info("correlationData:{}, ack:{}, cause:{}",
 //                        correlationData, ack, cause));
 //        return rabbitTemplate;
-//    }
-//
-//    //消息监听容器
-//    @Bean
-//    public SimpleMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory) {
-//        SimpleMessageListenerContainer messageListenerContainer = new SimpleMessageListenerContainer(connectionFactory);
-//        messageListenerContainer.setQueueNames("queue.order");
-//        //并发的消费者数量
-//        messageListenerContainer.setConcurrentConsumers(3);
-//        messageListenerContainer.setMaxConcurrentConsumers(5);
-//        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
-//        MessageListenerAdapter listenerAdapter = new MessageListenerAdapter();
-//        listenerAdapter.setDelegate(orderMessageService);
-//        Map<String, String> methodMap = new HashMap<>(8);
-//        methodMap.put("queue.order", "handleMessage1");
-//        listenerAdapter.setQueueOrTagToMethodName(methodMap);
-//        messageListenerContainer.setMessageListener(listenerAdapter);
-//        return messageListenerContainer;
 //    }
 }

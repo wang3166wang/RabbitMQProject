@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.food.orderservicemanager.dao.OrderDetailDao;
 import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.enummeration.OrderStatus;
+import com.imooc.food.orderservicemanager.moodymq.listener.AbstractMessageListener;
+import com.imooc.food.orderservicemanager.moodymq.sender.TransMessageSender;
 import com.imooc.food.orderservicemanager.po.OrderDetailPO;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -32,49 +34,56 @@ import java.io.IOException;
  */
 @Slf4j
 @Service
-public class OrderMessageService {
+public class OrderMessageService extends AbstractMessageListener {
 
+    @Autowired
+    TransMessageSender transMessageSender;
     @Autowired
     private OrderDetailDao orderDetailDao;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+//    @Autowired
+//    RabbitTemplate rabbitTemplate;
 
-    @RabbitListener(
-            //containerFactory = "rabbitListenerContainerFactory",
-            //queues = "queue.order",
-            //admin = "rabbitAdmin",
-            bindings = {
-                    @QueueBinding(
-                            value = @Queue(name = "${imooc.order-queue}",
-                                    arguments = {
-                                            //@Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
-                                            //@Argument(name = "x-dead-letter-exchange", value = "aaaaa"),
-                                            //@Argument(name = "x-dead-letter-routing-key", value = "bbbb")
-                                    }),
-                            exchange = @Exchange(name = "exchange.order.restaurant", type = ExchangeTypes.DIRECT),
-                            key = "key.order"
-                    ),
-                    @QueueBinding(
-                            value = @Queue(name = "${imooc.order-queue}"),
-                            exchange = @Exchange(name = "exchange.order.deliveryman", type = ExchangeTypes.DIRECT),
-                            key = "key.order"
-                    ),
-                    @QueueBinding(
-                            value = @Queue(name = "${imooc.order-queue}"),
-                            exchange = @Exchange(name = "exchange.settlement.order", type = ExchangeTypes.FANOUT),
-                            key = "key.order"
-                    ),
-                    @QueueBinding(
-                            value = @Queue(name = "${imooc.order-queue}"),
-                            exchange = @Exchange(name = "exchange.order.reward", type = ExchangeTypes.TOPIC),
-                            key = "key.order"
-                    )
-            }
-    )
-    public void handleMessage(@Payload Message message) throws IOException {
+//    @RabbitListener(
+//            //containerFactory = "rabbitListenerContainerFactory",
+//            //queues = "queue.order",
+//            //admin = "rabbitAdmin",
+//            bindings = {
+//                    @QueueBinding(
+//                            value = @Queue(name = "${imooc.order-queue}",
+//                                    arguments = {
+//                                            //@Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
+//                                            //@Argument(name = "x-dead-letter-exchange", value = "aaaaa"),
+//                                            //@Argument(name = "x-dead-letter-routing-key", value = "bbbb")
+//                                    }),
+//                            exchange = @Exchange(name = "exchange.order.restaurant", type = ExchangeTypes.DIRECT),
+//                            key = "key.order"
+//                    ),
+//                    @QueueBinding(
+//                            value = @Queue(name = "${imooc.order-queue}"),
+//                            exchange = @Exchange(name = "exchange.order.deliveryman", type = ExchangeTypes.DIRECT),
+//                            key = "key.order"
+//                    ),
+//                    @QueueBinding(
+//                            value = @Queue(name = "${imooc.order-queue}"),
+//                            exchange = @Exchange(name = "exchange.settlement.order", type = ExchangeTypes.FANOUT),
+//                            key = "key.order"
+//                    ),
+//                    @QueueBinding(
+//                            value = @Queue(name = "${imooc.order-queue}"),
+//                            exchange = @Exchange(name = "exchange.order.reward", type = ExchangeTypes.TOPIC),
+//                            key = "key.order"
+//                    )
+//            }
+//    )
+
+    @Override
+    public void receviceMessage(Message message) throws IOException {
+
+//    }
+//    public void handleMessage(@Payload Message message) throws IOException {
         log.info("Accept Routing Message");
         log.info("message:{}", new String(message.getBody()));
 //        ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -92,6 +101,14 @@ public class OrderMessageService {
                         orderPO.setPrice(orderMessageDTO.getPrice());
                         orderDetailDao.update(orderPO);
 
+                        transMessageSender.send(
+                                "exchange.order.deliveryman",
+                                "key.deliveryman",
+                                orderMessageDTO
+                        );
+
+//                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+
 //                        //这是最底层的发消息方法，下面rabbitTemplate的方法对底层方法进行了封装
 //                        try (Connection connection = connectionFactory.newConnection();
 //                             Channel channel = connection.createChannel()) {
@@ -100,13 +117,11 @@ public class OrderMessageService {
 //                                    messageToSend.getBytes());
 //                        }
 
-                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-
-                        //不传递额外参数时 用这个比较简单
-                        rabbitTemplate.convertAndSend(
-                                "exchange.order.deliveryman",
-                                "key.deliveryman",
-                                messageToSend);
+//                        //不传递额外参数时 用这个比较简单
+//                        rabbitTemplate.convertAndSend(
+//                                "exchange.order.deliveryman",
+//                                "key.deliveryman",
+//                                messageToSend);
                         log.info("restaurant微服务已确认，转发至deliveryman微服务");
                     } else {
                         orderPO.setStatus(OrderStatus.FAILED);
@@ -120,11 +135,13 @@ public class OrderMessageService {
                         orderPO.setDeliverymanId(orderMessageDTO.getDeliverymanId());
                         orderDetailDao.update(orderPO);
 
-                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                        rabbitTemplate.convertAndSend(
-                                "exchange.order.settlement",
-                                "key.settlement",
-                                messageToSend);
+
+                        transMessageSender.send("exchange.order.settlement","key.settlement",orderMessageDTO);
+//                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+//                        rabbitTemplate.convertAndSend(
+//                                "exchange.order.settlement",
+//                                "key.settlement",
+//                                messageToSend);
                         log.info("deliveryman微服务已确认，转发至settlement微服务");
 
                     } else {
@@ -139,11 +156,14 @@ public class OrderMessageService {
                         orderPO.setSettlementId(orderMessageDTO.getSettlementId());
                         orderDetailDao.update(orderPO);
 
-                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-                        rabbitTemplate.convertAndSend(
-                                "exchange.order.reward",
-                                "key.reward",
-                                messageToSend);
+                        transMessageSender.send("exchange.order.reward","key.reward",orderMessageDTO);
+
+//                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+//                        transMessageSender.send("exchange.order.reward","key.reward",messageToSend);
+//                        rabbitTemplate.convertAndSend(
+//                                "exchange.order.reward",
+//                                "key.reward",
+//                                messageToSend);
                         log.info("settlement微服务已确认，转发至reward微服务");
 
                     } else {
@@ -166,8 +186,10 @@ public class OrderMessageService {
                     break;
             }
 
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException();
         }
     }
+
 }

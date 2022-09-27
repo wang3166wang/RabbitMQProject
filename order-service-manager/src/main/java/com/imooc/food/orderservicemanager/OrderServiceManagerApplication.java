@@ -8,9 +8,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-@MapperScan(value = "com.imooc.food" , annotationClass = Mapper.class)
-@ComponentScan("com.imooc.food")
-@EnableAsync
+@MapperScan(value = "com.imooc" , annotationClass = Mapper.class)
+@ComponentScan("com.imooc")
+//@EnableAsync
 public class OrderServiceManagerApplication {
 
 	public static void main(String[] args) {
