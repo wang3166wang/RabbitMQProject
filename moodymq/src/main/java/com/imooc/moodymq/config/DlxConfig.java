@@ -1,4 +1,4 @@
-package com.imooc.food.orderservicemanager.moodymq.config;
+package com.imooc.moodymq.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

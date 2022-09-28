@@ -1,6 +1,6 @@
-package com.imooc.food.orderservicemanager.moodymq.config;
+package com.imooc.moodymq.config;
 
-import com.imooc.food.orderservicemanager.moodymq.service.TransMessageService;
+import com.imooc.moodymq.service.TransMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;

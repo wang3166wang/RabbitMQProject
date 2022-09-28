@@ -8,11 +8,16 @@ import com.imooc.food.restaurantservicemanager.enummeration.ProductStatus;
 import com.imooc.food.restaurantservicemanager.enummeration.RestaurantStatus;
 import com.imooc.food.restaurantservicemanager.po.ProductPO;
 import com.imooc.food.restaurantservicemanager.po.RestaurantPO;
+import com.imooc.moodymq.listener.AbstractMessageListener;
+import com.imooc.moodymq.sender.TransMessageSender;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 /**
  * @ClassName: OrderMessageService
@@ -25,15 +30,56 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class OrderMessageService {
+public class OrderMessageService extends AbstractMessageListener {
     ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired
+    TransMessageSender transMessageSender;
     @Autowired
     ProductDao productDao;
     @Autowired
     RestaurantDao restaurantDao;
 
-    @Async
+    @Override
+    public void receviceMessage(Message message) throws IOException {
+        String body = new String(message.getBody());
+        String replaceAll = body.replaceAll("\\\\", "");
+        String bodyFormat = replaceAll.substring(1, replaceAll.length() - 1);
+
+        log.info("Accept Routing Message");
+        log.info("messageBody:{}", bodyFormat);
+
+        try {
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(bodyFormat, OrderMessageDTO.class);
+            ProductPO productPO = productDao.selsctProduct(orderMessageDTO.getProductId());
+            log.info("onMessage:productPO:{}", productPO);
+            RestaurantPO restaurantPO = restaurantDao.selsctRestaurant(productPO.getRestaurantId());
+            log.info("onMessage:restaurantPO:{}", restaurantPO);
+
+            if (ProductStatus.AVALIABLE == productPO.getStatus() && RestaurantStatus.OPEN == restaurantPO.getStatus()) {
+                orderMessageDTO.setConfirmed(true);
+                orderMessageDTO.setPrice(productPO.getPrice());
+            } else {
+                orderMessageDTO.setConfirmed(false);
+            }
+            log.info("sendMessage:restaurantOrderMessageDTO:{}", orderMessageDTO);
+
+            transMessageSender.send(
+                    "exchange.order.restaurant",
+                    "key.order",
+                    orderMessageDTO
+            );
+
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException();
+        }
+
+    }
+
+
+
+/*    @Async
     public void handleMessage() throws Exception {
         log.info("start linstening message");
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -118,6 +164,6 @@ public class OrderMessageService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    };
+    };*/
 
 }

@@ -80,17 +80,14 @@ public class OrderMessageService extends AbstractMessageListener {
 //    )
 
     @Override
-    public void receviceMessage(Message message) throws IOException {
+    public void receviceMessage(Message message) {
 
 //    }
 //    public void handleMessage(@Payload Message message) throws IOException {
         log.info("Accept Routing Message");
         log.info("message:{}", new String(message.getBody()));
-//        ConnectionFactory connectionFactory = new ConnectionFactory();
-//        connectionFactory.setHost("localhost");
         try {
-            OrderMessageDTO orderMessageDTO = objectMapper.readValue(message.getBody(),
-                    OrderMessageDTO.class);
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(message.getBody(), OrderMessageDTO.class);
             OrderDetailPO orderPO = orderDetailDao.selectOrder(orderMessageDTO.getOrderId());
 
             switch (orderPO.getStatus()) {
@@ -134,7 +131,6 @@ public class OrderMessageService extends AbstractMessageListener {
                         orderPO.setStatus(OrderStatus.DELIVERYMAN_CONFIRMED);
                         orderPO.setDeliverymanId(orderMessageDTO.getDeliverymanId());
                         orderDetailDao.update(orderPO);
-
 
                         transMessageSender.send("exchange.order.settlement","key.settlement",orderMessageDTO);
 //                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);

@@ -1,8 +1,8 @@
-package com.imooc.food.orderservicemanager.moodymq.task;
+package com.imooc.moodymq.task;
 
-import com.imooc.food.orderservicemanager.moodymq.po.TransMessagePO;
-import com.imooc.food.orderservicemanager.moodymq.sender.TransMessageSender;
-import com.imooc.food.orderservicemanager.moodymq.service.TransMessageService;
+import com.imooc.moodymq.po.TransMessagePO;
+import com.imooc.moodymq.sender.TransMessageSender;
+import com.imooc.moodymq.service.TransMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;

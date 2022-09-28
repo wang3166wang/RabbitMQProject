@@ -1,8 +1,8 @@
-package com.imooc.food.orderservicemanager.moodymq.service;
+package com.imooc.moodymq.service;
 
-import com.imooc.food.orderservicemanager.moodymq.dao.TransMessageDao;
-import com.imooc.food.orderservicemanager.moodymq.enummeration.TransMessageType;
-import com.imooc.food.orderservicemanager.moodymq.po.TransMessagePO;
+import com.imooc.moodymq.dao.TransMessageDao;
+import com.imooc.moodymq.enummeration.TransMessageType;
+import com.imooc.moodymq.po.TransMessagePO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

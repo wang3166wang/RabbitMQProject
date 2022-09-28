@@ -1,5 +1,6 @@
 package com.imooc.food.orderservicemanager.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.food.orderservicemanager.dao.OrderDetailDao;
 import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
@@ -38,10 +39,10 @@ public class OrderService {
 //    @Autowired
 //    private RabbitTemplate rabbitTemplate;
 
-//    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public String createOrder(OrderCreateVO orderCreateVO) {
+    public String createOrder(OrderCreateVO orderCreateVO) throws JsonProcessingException, InterruptedException {
         log.info("orderCreateVO:{}", orderCreateVO);
         OrderDetailPO orderPO = new OrderDetailPO();
         orderPO.setAddress(orderCreateVO.getAddress());
@@ -57,10 +58,12 @@ public class OrderService {
         orderMessageDTO.setProductId(orderPO.getProductId());
         orderMessageDTO.setAccountId(orderCreateVO.getAccountId());
 
+        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+
         transMessageSender.send(
                 "exchange.order.restaurant",
                 "key.restaurant",
-                orderMessageDTO
+                messageToSend
         );
 
 //        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
@@ -91,7 +94,7 @@ public class OrderService {
 
         log.info("order微服务生成订单，转发至restaurant微服务");
 
-//        Thread.sleep(1000);
+        Thread.sleep(1000);
 
         return "SUCCESS";
 

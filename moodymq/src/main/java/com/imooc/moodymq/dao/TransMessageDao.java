@@ -1,7 +1,7 @@
-package com.imooc.food.orderservicemanager.moodymq.dao;
+package com.imooc.moodymq.dao;
 
 
-import com.imooc.food.orderservicemanager.moodymq.po.TransMessagePO;
+import com.imooc.moodymq.po.TransMessagePO;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 

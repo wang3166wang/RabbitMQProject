@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @MapperScan(value = "com.imooc" , annotationClass = Mapper.class)
 @ComponentScan("com.imooc")
-//@EnableAsync
+@EnableAsync
 public class OrderServiceManagerApplication {
 
 	public static void main(String[] args) {

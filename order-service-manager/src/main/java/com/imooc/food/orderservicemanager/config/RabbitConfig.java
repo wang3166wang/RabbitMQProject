@@ -118,8 +118,10 @@ public class RabbitConfig {
     @Bean
     public SimpleMessageListenerContainer simpleMessageListenerContainer(ConnectionFactory connectionFactory, OrderMessageService orderMessageService) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
+        //可配置多个监听队列
         container.setQueueNames("queue.order");
         container.setExposeListenerChannel(true);
+        //消费端确认方式
         container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         container.setMessageListener(orderMessageService);
         return container;
