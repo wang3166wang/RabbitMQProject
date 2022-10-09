@@ -81,8 +81,6 @@ public class OrderMessageService extends AbstractMessageListener {
 
     @Override
     public void receviceMessage(Message message) {
-
-//    }
 //    public void handleMessage(@Payload Message message) throws IOException {
         log.info("Accept Routing Message");
         log.info("message:{}", new String(message.getBody()));
@@ -132,7 +130,10 @@ public class OrderMessageService extends AbstractMessageListener {
                         orderPO.setDeliverymanId(orderMessageDTO.getDeliverymanId());
                         orderDetailDao.update(orderPO);
 
-                        transMessageSender.send("exchange.order.settlement","key.settlement",orderMessageDTO);
+                        transMessageSender.send(
+                                "exchange.order.settlement",
+                                "key.settlement",
+                                orderMessageDTO);
 //                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
 //                        rabbitTemplate.convertAndSend(
 //                                "exchange.order.settlement",
@@ -152,7 +153,10 @@ public class OrderMessageService extends AbstractMessageListener {
                         orderPO.setSettlementId(orderMessageDTO.getSettlementId());
                         orderDetailDao.update(orderPO);
 
-                        transMessageSender.send("exchange.order.reward","key.reward",orderMessageDTO);
+                        transMessageSender.send(
+                                "exchange.order.reward",
+                                "key.reward",
+                                orderMessageDTO);
 
 //                        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
 //                        transMessageSender.send("exchange.order.reward","key.reward",messageToSend);

@@ -121,7 +121,7 @@ public class RabbitConfig {
         //可配置多个监听队列
         container.setQueueNames("queue.order");
         container.setExposeListenerChannel(true);
-        //消费端确认方式
+        //消费端设置确认模式:手工确认
         container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         container.setMessageListener(orderMessageService);
         return container;

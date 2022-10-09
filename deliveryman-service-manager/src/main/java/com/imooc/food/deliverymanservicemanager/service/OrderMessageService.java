@@ -1,20 +1,20 @@
 package com.imooc.food.deliverymanservicemanager.service;
 
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.food.deliverymanservicemanager.dao.DeliverymanDao;
 import com.imooc.food.deliverymanservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.deliverymanservicemanager.enummeration.DeliverymanStatus;
+import com.imooc.food.deliverymanservicemanager.moodymq.listener.AbstractMessageListener;
+import com.imooc.food.deliverymanservicemanager.moodymq.sender.TransMessageSender;
 import com.imooc.food.deliverymanservicemanager.po.DeliverymanPO;
-import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName: OrderMessageService
@@ -27,13 +27,40 @@ import java.util.concurrent.TimeoutException;
  */
 @Slf4j
 @Service
-public class OrderMessageService {
+public class OrderMessageService extends AbstractMessageListener {
     @Autowired
     DeliverymanDao deliverymanDao;
+    @Autowired
+    private TransMessageSender transMessageSender;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    DeliverCallback deliverCallback = (consumerTag, message) -> {
+    @Override
+    public void receviceMessage(Message message) {
+        String body = new String(message.getBody());
+
+        log.info("Accept Routing Message");
+        log.info("messageBody:{}", body);
+
+        try {
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(body, OrderMessageDTO.class);
+
+            List<DeliverymanPO> deliverymanPOS = deliverymanDao.selectAvaliableDeliveryman(DeliverymanStatus.AVALIABLE);
+            orderMessageDTO.setDeliverymanId(deliverymanPOS.get(0).getId());
+            log.info("onMessage:restaurantOrderMessageDTO:{}", orderMessageDTO);
+
+            transMessageSender.send(
+                    "exchange.order.deliveryman",
+                    "key.order",
+                    orderMessageDTO
+            );
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException();
+        }
+    }
+
+/*    DeliverCallback deliverCallback = (consumerTag, message) -> {
         String messageBody = new String(message.getBody());
         log.info("deliverCallback:messageBody:{}", messageBody);
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -90,5 +117,5 @@ public class OrderMessageService {
                 Thread.sleep(100000);
             }
         }
-    }
+    }*/
 }

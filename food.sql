@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 80020
 File Encoding         : 65001
 
-Date: 2022-09-02 17:47:46
+Date: 2022-10-09 11:53:27
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -48,12 +48,12 @@ CREATE TABLE `order_detail` (
   `price` decimal(10,2) DEFAULT NULL COMMENT '价格',
   `date` datetime DEFAULT NULL COMMENT '时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=417 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=508 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of order_detail
 -- ----------------------------
-INSERT INTO `order_detail` VALUES ('416', 'ORDER_CREATED', '请送到西安钟楼下', '413296877', '2', '1', '1265', '10', '23.25', '2022-09-02 17:45:07');
+INSERT INTO `order_detail` VALUES ('507', 'ORDER_CREATED', 'jay-9527', '413296877', '2', '1', '571087981', '27', '23.25', '2022-10-09 11:52:03');
 
 -- ----------------------------
 -- Table structure for product
@@ -104,12 +104,12 @@ CREATE TABLE `reward` (
   `status` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '状态',
   `date` datetime DEFAULT NULL COMMENT '时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of reward
 -- ----------------------------
-INSERT INTO `reward` VALUES ('10', '416', '23.25', 'SUCCESS', '2022-09-02 17:45:35');
+INSERT INTO `reward` VALUES ('27', '507', '23.25', 'SUCCESS', '2022-10-09 11:52:03');
 
 -- ----------------------------
 -- Table structure for settlement
@@ -123,9 +123,30 @@ CREATE TABLE `settlement` (
   `status` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '状态',
   `date` datetime DEFAULT NULL COMMENT '时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1266 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1284 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of settlement
 -- ----------------------------
-INSERT INTO `settlement` VALUES ('1265', '416', '385847397', '23.25', 'SUCCESS', '2022-09-02 17:45:28');
+INSERT INTO `settlement` VALUES ('1283', '507', '571087981', '23.25', 'SUCCESS', '2022-10-09 11:52:03');
+
+-- ----------------------------
+-- Table structure for trans_message
+-- ----------------------------
+DROP TABLE IF EXISTS `trans_message`;
+CREATE TABLE `trans_message` (
+  `id` varchar(50) NOT NULL,
+  `service` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '服务名称',
+  `type` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '消息转发状态',
+  `exchange` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '交换机名称',
+  `routing_key` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '绑定的交换机主键',
+  `queue` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '队列',
+  `sequence` int DEFAULT NULL COMMENT '消息转发重试计数器',
+  `payload` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '信息内容',
+  `date` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日期',
+  PRIMARY KEY (`id`,`service`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of trans_message
+-- ----------------------------

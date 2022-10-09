@@ -95,9 +95,6 @@ public class TransMessageServiceImpl implements TransMessageService {
     public TransMessagePO messageReceiveReady(
             String id, String exchange, String routingKey, String queue, String body) {
 
-        String replaceAll = body.replaceAll("\\\\", "");
-        String bodyFormat = replaceAll.substring(1, replaceAll.length() - 1);
-
         //查询消息是否已经存在
         TransMessagePO transMessagePO = transMessageDao.selectByIdAndService(id, serviceName);
         if (null == transMessagePO) {
@@ -107,7 +104,7 @@ public class TransMessageServiceImpl implements TransMessageService {
             transMessagePO.setExchange(exchange);
             transMessagePO.setRoutingKey(routingKey);
             transMessagePO.setQueue(queue);
-            transMessagePO.setPayload(bodyFormat);
+            transMessagePO.setPayload(body);
             transMessagePO.setDate(new Date());
             transMessagePO.setSequence(0);
             transMessagePO.setType(TransMessageType.RECEIVE);

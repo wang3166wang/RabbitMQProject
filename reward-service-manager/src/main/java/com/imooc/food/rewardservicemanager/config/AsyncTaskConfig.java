@@ -18,8 +18,8 @@ import java.util.concurrent.Executor;
  * @version: V1.0
  * @Copyright: Copyright (c) 2022
  */
-@Configuration
-@EnableAsync
+//@Configuration
+//@EnableAsync
 public class AsyncTaskConfig implements AsyncConfigurer {
 
     // ThredPoolTaskExcutor的处理流程

@@ -6,10 +6,10 @@ import com.imooc.food.restaurantservicemanager.dao.RestaurantDao;
 import com.imooc.food.restaurantservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.restaurantservicemanager.enummeration.ProductStatus;
 import com.imooc.food.restaurantservicemanager.enummeration.RestaurantStatus;
+import com.imooc.food.restaurantservicemanager.moodymq.listener.AbstractMessageListener;
+import com.imooc.food.restaurantservicemanager.moodymq.sender.TransMessageSender;
 import com.imooc.food.restaurantservicemanager.po.ProductPO;
 import com.imooc.food.restaurantservicemanager.po.RestaurantPO;
-import com.imooc.moodymq.listener.AbstractMessageListener;
-import com.imooc.moodymq.sender.TransMessageSender;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -41,16 +41,14 @@ public class OrderMessageService extends AbstractMessageListener {
     RestaurantDao restaurantDao;
 
     @Override
-    public void receviceMessage(Message message) throws IOException {
+    public void receviceMessage(Message message) {
         String body = new String(message.getBody());
-        String replaceAll = body.replaceAll("\\\\", "");
-        String bodyFormat = replaceAll.substring(1, replaceAll.length() - 1);
 
         log.info("Accept Routing Message");
-        log.info("messageBody:{}", bodyFormat);
+        log.info("messageBody:{}", body);
 
         try {
-            OrderMessageDTO orderMessageDTO = objectMapper.readValue(bodyFormat, OrderMessageDTO.class);
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(body, OrderMessageDTO.class);
             ProductPO productPO = productDao.selsctProduct(orderMessageDTO.getProductId());
             log.info("onMessage:productPO:{}", productPO);
             RestaurantPO restaurantPO = restaurantDao.selsctRestaurant(productPO.getRestaurantId());
@@ -76,8 +74,6 @@ public class OrderMessageService extends AbstractMessageListener {
         }
 
     }
-
-
 
 /*    @Async
     public void handleMessage() throws Exception {

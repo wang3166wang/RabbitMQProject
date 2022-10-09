@@ -36,13 +36,8 @@ public class OrderService {
     private OrderDetailDao orderDetailDao;
     @Autowired
     TransMessageSender transMessageSender;
-//    @Autowired
-//    private RabbitTemplate rabbitTemplate;
 
-    ObjectMapper objectMapper = new ObjectMapper();
-
-
-    public String createOrder(OrderCreateVO orderCreateVO) throws JsonProcessingException, InterruptedException {
+    public void createOrder(OrderCreateVO orderCreateVO) throws InterruptedException {
         log.info("orderCreateVO:{}", orderCreateVO);
         OrderDetailPO orderPO = new OrderDetailPO();
         orderPO.setAddress(orderCreateVO.getAddress());
@@ -58,12 +53,10 @@ public class OrderService {
         orderMessageDTO.setProductId(orderPO.getProductId());
         orderMessageDTO.setAccountId(orderCreateVO.getAccountId());
 
-        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-
         transMessageSender.send(
                 "exchange.order.restaurant",
                 "key.restaurant",
-                messageToSend
+                orderMessageDTO
         );
 
 //        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
@@ -95,8 +88,6 @@ public class OrderService {
         log.info("order微服务生成订单，转发至restaurant微服务");
 
         Thread.sleep(1000);
-
-        return "SUCCESS";
 
     }
 

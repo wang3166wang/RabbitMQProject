@@ -1,6 +1,7 @@
 package com.imooc.food.orderservicemanager.moodymq.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.imooc.food.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.food.orderservicemanager.moodymq.po.TransMessagePO;
 import com.imooc.food.orderservicemanager.moodymq.service.TransMessageService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class TransMessageSender {
     @Autowired
     TransMessageService transMessageService;
 
-    public void send(String exchange, String routingKey, Object payload){
+    public void send(String exchange, String routingKey, OrderMessageDTO payload){
         log.info("send(): exchange:{} routingKey:{} payload:{}",
                 exchange, routingKey, payload);
         try {

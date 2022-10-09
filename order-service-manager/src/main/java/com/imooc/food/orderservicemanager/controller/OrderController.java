@@ -30,8 +30,8 @@ public class OrderController {
     OrderService orderService;
 
     @PostMapping("/orders")
-    public String createOrder(@RequestBody OrderCreateVO orderCreateDTO) throws IOException, TimeoutException, InterruptedException {
+    public void createOrder(@RequestBody OrderCreateVO orderCreateDTO) throws IOException, TimeoutException, InterruptedException {
         log.info("createOrder:orderCreateDTO:{}", orderCreateDTO);
-        return orderService.createOrder(orderCreateDTO);
+        orderService.createOrder(orderCreateDTO);
     }
 }
