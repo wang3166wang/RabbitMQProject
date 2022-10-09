@@ -38,11 +38,11 @@ public abstract class AbstractMessageListener implements ChannelAwareMessageList
 
         //收到消息后先进行落盘处理
         TransMessagePO transMessagePO = transMessageService.messageReceiveReady(
-                        messageProperties.getMessageId(),
-                        messageProperties.getReceivedExchange(),
-                        messageProperties.getReceivedRoutingKey(),
-                        messageProperties.getConsumerQueue(),
-                        new String(message.getBody()));
+                messageProperties.getMessageId(),
+                messageProperties.getReceivedExchange(),
+                messageProperties.getReceivedRoutingKey(),
+                messageProperties.getConsumerQueue(),
+                new String(message.getBody()));
 
         log.info("收到消息{}, 消费次数{}", messageProperties.getMessageId(),transMessagePO.getSequence());
 
@@ -51,6 +51,7 @@ public abstract class AbstractMessageListener implements ChannelAwareMessageList
             //默认情况下，消费端接收消息时，消息会被自动确认（ACK)
             //这里进行手动ACK
             channel.basicAck(deliveryTag , false);
+            log.info("收到消息{}，手动ACK",messageProperties.getMessageId());
             //手动确认完后，数据库删除消息
             transMessageService.messageReceiveSuccess(messageProperties.getMessageId());
         }catch (Exception e){
